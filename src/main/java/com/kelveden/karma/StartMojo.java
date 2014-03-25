@@ -1,19 +1,22 @@
 /**
  * Copyright 2013 Alistair Dutton
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.kelveden.karma;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -25,12 +28,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 import org.fusesource.jansi.AnsiConsole;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.List;
 
 /**
  * Executes the 'start' task against Karma. See the Karma documentation itself for information: http://karma.github.com.
@@ -127,6 +124,12 @@ public class StartMojo extends AbstractMojo {
     private Boolean colors;
 
     /**
+     * Override the Hostname to be used when capturing browsers. 
+     */
+    @Parameter(property = "hostname", required = false, defaultValue = "localhost")
+    private String hostname;
+
+    /**
      * Flag that when set to true indicates that execution of the goal should be skipped. Note that setting this property
      * will skip Karma tests *only*. If you also want to skip tests such as those run by the maven-surefire-plugin, consider
      * using the skipTests property instead.
@@ -152,6 +155,7 @@ public class StartMojo extends AbstractMojo {
     @Parameter(property = "karmaExecutable", required = false, defaultValue = "karma")
     private String karmaExecutable;
 
+    @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         if (skipKarma || skipTests) {
@@ -180,13 +184,15 @@ public class StartMojo extends AbstractMojo {
         String karmaConfiguration;
 
         if (!configFile.exists()) {
-            throw new MojoFailureException("Cannot read the supplied Karma configuration file because it does not exist: " + configFile.getAbsolutePath());
+            throw new MojoFailureException("Cannot read the supplied Karma configuration file because it does not exist: "
+                    + configFile.getAbsolutePath());
         }
 
         try {
             karmaConfiguration = FileUtils.readFileToString(configFile);
         } catch (IOException e) {
-            throw new MojoFailureException("Cannot read the supplied Karma configuration at " + configFile.getAbsolutePath() + ". Do you have read permission?");
+            throw new MojoFailureException("Cannot read the supplied Karma configuration at "
+                    + configFile.getAbsolutePath() + ". Do you have read permission?");
         }
 
         if (!reportsDirectory.exists() && !reportsDirectory.mkdirs()) {
@@ -194,7 +200,8 @@ public class StartMojo extends AbstractMojo {
         }
 
         if (!reportsDirectory.isDirectory() || !reportsDirectory.canWrite()) {
-            throw new MojoFailureException("Cannot write to the supplied reporting directory " + reportsDirectory.getAbsolutePath());
+            throw new MojoFailureException("Cannot write to the supplied reporting directory "
+                    + reportsDirectory.getAbsolutePath());
         }
 
         if (junitReportFile != null) {
@@ -210,7 +217,8 @@ public class StartMojo extends AbstractMojo {
             }
 
             if (!karmaConfiguration.contains("'" + KARMA_JUNIT_REPORTER_PLUGIN + "'")) {
-                getLog().warn("Could not find the " + KARMA_JUNIT_REPORTER_PLUGIN + " plugin in the supplied configuration file. Test results may be unavailable or incorrect!");
+                getLog().warn("Could not find the " + KARMA_JUNIT_REPORTER_PLUGIN
+                        + " plugin in the supplied configuration file. Test results may be unavailable or incorrect!");
             }
         }
     }
@@ -231,6 +239,7 @@ public class StartMojo extends AbstractMojo {
         command.addAll(KarmaUtils.valueToKarmaArgument(captureTimeout, "--capture-timeout"));
         command.addAll(KarmaUtils.valueToKarmaArgument(reportSlowerThan, "--report-slower-than"));
         command.addAll(KarmaUtils.valueToKarmaArgument(colors, "--colors"));
+        command.addAll(KarmaUtils.valueToKarmaArgument(hostname, "--hostname"));
 
         builder.redirectErrorStream(true);
 
@@ -287,7 +296,10 @@ public class StartMojo extends AbstractMojo {
         if (junitReportFile != null) {
 
             if (!junitReportFile.exists() || !junitReportFile.isFile()) {
-                getLog().warn("Karma's junit reporter was enabled but no results were found at " + junitReportFile.getAbsolutePath() + ". Is the reporter plugin (" + KARMA_JUNIT_REPORTER_PLUGIN + ") installed correctly and enabled in the Karma configuration file?");
+                getLog().warn("Karma's junit reporter was enabled but no results were found at "
+                        + junitReportFile.getAbsolutePath() + ". Is the reporter plugin ("
+                        + KARMA_JUNIT_REPORTER_PLUGIN
+                        + ") installed correctly and enabled in the Karma configuration file?");
             } else {
                 try {
                     FileUtils.copyFile(junitReportFile, new File(reportsDirectory, junitReportFile.getName()));
