@@ -52,7 +52,9 @@ Full Example:
             <skipKarma>false</skipKarma>
             <skipTests>false</skipTests>
             <karmaFailureIgnore>false</karmaFailureIgnore>
+            <karmaExecutable>karma</karmaExecutable>
             <reporters>dots,junit</reporters>
+            <hostname>localhost</hostname>
         </configuration>
     </plugin>
 
